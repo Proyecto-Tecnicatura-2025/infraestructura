@@ -1,0 +1,62 @@
+version: "3.9"
+
+name: sso_local                     # prefijo de proyecto (evita colisiones)
+services:
+  oauth:
+    build:
+      context: ../../oauth-service
+      dockerfile: Dockerfile
+    # ⚠️ Evitamos container_name para que Docker anteponga "sso_local_" y no colisione.
+    ports:
+      - "${AUTH_PORT:-8080}:80"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:${AUTH_PORT:-8080}
+      DB_CONNECTION: mysql
+      DB_HOST: db-oauth
+      DB_DATABASE: app
+      DB_USERNAME: app
+      DB_PASSWORD: secret
+      PASSPORT_SKIP_CONSENT: "false"
+    depends_on:
+      - db-oauth
+    networks: [sso_net]
+
+  web:
+    build:
+      context: ../../web-client
+      dockerfile: Dockerfile
+    ports:
+      - "${WEB_PORT:-5173}:5173"
+    environment:
+      VITE_AUTH_URL: http://localhost:${AUTH_PORT:-8080}
+      VITE_API_URL: http://localhost:${AUTH_PORT:-8080}
+      VITE_REDIRECT_URI: http://localhost:${WEB_PORT:-5173}/auth/callback
+      VITE_OAUTH_CLIENT_ID: ${VITE_OAUTH_CLIENT_ID:-}   # se completa luego
+    depends_on: [oauth]
+    networks: [sso_net]
+
+  db-oauth:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: app
+      MYSQL_USER: app
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "${DB_PORT:-3306}:3306"          # cambia si ya hay otra MySQL local
+    healthcheck:
+      test: ["CMD","mysqladmin","ping","-h","127.0.0.1","-uapp","-psecret"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - db_oauth_data:/var/lib/mysql
+    networks: [sso_net]
+
+volumes:
+  db_oauth_data:
+
+networks:
+  sso_net:
