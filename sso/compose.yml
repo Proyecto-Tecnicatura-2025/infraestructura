@@ -1,62 +1,114 @@
-version: "3.9"
+name: sso_local
 
-name: sso_local                     # prefijo de proyecto (evita colisiones)
 services:
-  oauth:
+  backend:
     build:
-      context: ../../oauth-service
+      context: ${BACKEND_CONTEXT:-../../auth-service}
       dockerfile: Dockerfile
-    # ⚠️ Evitamos container_name para que Docker anteponga "sso_local_" y no colisione.
-    ports:
-      - "${AUTH_PORT:-8080}:80"
+    depends_on:
+      db-oauth:
+        condition: service_healthy
     environment:
-      APP_ENV: local
-      APP_DEBUG: "true"
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
       APP_URL: http://localhost:${AUTH_PORT:-8080}
       DB_CONNECTION: mysql
       DB_HOST: db-oauth
-      DB_DATABASE: app
-      DB_USERNAME: app
-      DB_PASSWORD: secret
-      PASSPORT_SKIP_CONSENT: "false"
-    depends_on:
-      - db-oauth
+      DB_PORT: 3306
+      DB_DATABASE: ${AUTH_DB_NAME:-app}
+      DB_USERNAME: ${AUTH_DB_USER:-app}
+      DB_PASSWORD: ${AUTH_DB_PASS:-secret}
+      CACHE_DRIVER: ${CACHE_DRIVER:-file}
+      CACHE_STORE: ${CACHE_STORE:-file}
+      SESSION_DRIVER: ${SESSION_DRIVER:-file}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-sync}
+      PASSPORT_SKIP_CONSENT: ${PASSPORT_SKIP_CONSENT:-false}
+    ports:
+      - "${AUTH_PORT:-8080}:80"
+    volumes:
+      - ${BACKEND_CONTEXT:-../../auth-service}:/var/www/html:Z
+      - vendor:/var/www/html/vendor
+      - storage:/var/www/html/storage
+      - bootstrap_cache:/var/www/html/bootstrap/cache
+    # usá el entrypoint del repo si existe; sino apache
+    command:
+    - bash
+    - -lc
+    - >
+      set -e;
+      cd /var/www/html;
+      mkdir -p storage/framework/{sessions,views,cache,data} resources/views;
+      chown -R www-data:www-data storage bootstrap/cache || true;
+      chmod -R ug+rw storage bootstrap/cache || true;
+      if [ -x /usr/local/bin/entrypoint.sh ]; then
+        exec /usr/local/bin/entrypoint.sh;
+      else
+        exec apache2-foreground;
+      fi
     networks: [sso_net]
 
-  web:
-    build:
-      context: ../../web-client
-      dockerfile: Dockerfile
+  web_client:
+    image: node:20-alpine
+    working_dir: /app
+    depends_on:
+      backend:
+        condition: service_started
+    environment:
+      VITE_API_URL:  http://localhost:${AUTH_PORT:-8080}
+      VITE_AUTH_URL: http://localhost:${AUTH_PORT:-8080}
+      VITE_REDIRECT_URI: http://localhost:${WEB_PORT:-5173}/auth/callback
+      VITE_OAUTH_CLIENT_ID: ${VITE_OAUTH_CLIENT_ID:-}
+      CHOKIDAR_USEPOLLING: "1"
     ports:
       - "${WEB_PORT:-5173}:5173"
-    environment:
-      VITE_AUTH_URL: http://localhost:${AUTH_PORT:-8080}
-      VITE_API_URL: http://localhost:${AUTH_PORT:-8080}
-      VITE_REDIRECT_URI: http://localhost:${WEB_PORT:-5173}/auth/callback
-      VITE_OAUTH_CLIENT_ID: ${VITE_OAUTH_CLIENT_ID:-}   # se completa luego
-    depends_on: [oauth]
+    volumes:
+      - ${WEB_CONTEXT:-../../web-client}:/app:Z,delegated
+      - app_web_client_node_modules:/app/node_modules
+    command:
+      - sh
+      - -lc
+      - >
+        set -e;
+        if [ ! -f package.json ]; then
+          echo "📭 web-client: no hay package.json en /app (WEB_CONTEXT mal?)."; exit 1;
+        fi;
+        if [ ! -x node_modules/.bin/vite ]; then
+          echo "📦 instalando dependencias...";
+          if   [ -f pnpm-lock.yaml ]; then npm -g i pnpm && pnpm i;
+          elif [ -f yarn.lock ];      then npm -g i yarn && (yarn install --frozen-lockfile || yarn install);
+          elif [ -f package-lock.json ]; then npm ci || npm install;
+          else npm install; fi;
+        else
+          echo "✅ dependencias OK (vite encontrado)";
+        fi;
+        exec npm run dev -- --host --port 5173
     networks: [sso_net]
 
   db-oauth:
     image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password --sql-mode=NO_ENGINE_SUBSTITUTION
     environment:
-      MYSQL_DATABASE: app
-      MYSQL_USER: app
-      MYSQL_PASSWORD: secret
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE:      ${AUTH_DB_NAME:-app}
+      MYSQL_USER:          ${AUTH_DB_USER:-app}
+      MYSQL_PASSWORD:      ${AUTH_DB_PASS:-secret}
     ports:
-      - "${DB_PORT:-3306}:3306"          # cambia si ya hay otra MySQL local
+      - "${DB_PORT:-3306}:3306"
     healthcheck:
-      test: ["CMD","mysqladmin","ping","-h","127.0.0.1","-uapp","-psecret"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u${AUTH_DB_USER:-app} -p${AUTH_DB_PASS:-secret}"]
       interval: 5s
-      timeout: 3s
+      timeout: 2s
       retries: 30
     volumes:
-      - db_oauth_data:/var/lib/mysql
+      - dbdata:/var/lib/mysql
     networks: [sso_net]
 
 volumes:
-  db_oauth_data:
+  dbdata:
+  vendor:
+  storage:
+  bootstrap_cache:
+  app_web_client_node_modules:
 
 networks:
   sso_net:

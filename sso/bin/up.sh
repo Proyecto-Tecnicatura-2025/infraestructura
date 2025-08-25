@@ -2,7 +2,6 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 export COMPOSE_PROJECT_NAME=sso_local
-# usa .env.local si existe
-[ -f .env.local ] && export $(grep -v '^#' .env.local | xargs)
-
+[ -f .env.local ] && set -a && . ./.env.local && set +a
 docker compose -f compose.yml up -d --build
+docker compose -f compose.yml ps
