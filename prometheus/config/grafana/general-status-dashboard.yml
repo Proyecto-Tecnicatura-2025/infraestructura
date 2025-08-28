@@ -1,0 +1,510 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 7,
+  "links": [],
+  "panels": [
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "displayMode": "color-text",
+            "filterable": true
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "red",
+                  "index": 1,
+                  "text": "Down"
+                },
+                "1": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "Up"
+                },
+                "AWS-BR": {
+                  "color": "dark-green",
+                  "index": 3
+                },
+                "AWS-DE": {
+                  "color": "blue",
+                  "index": 2
+                },
+                "AWS-USA": {
+                  "color": "dark-red",
+                  "index": 4
+                },
+                "CURACAO": {
+                  "color": "yellow",
+                  "index": 7
+                },
+                "LINODE": {
+                  "color": "rgba(0, 245, 228, 1)",
+                  "index": 9
+                },
+                "LeaseWeb-DE": {
+                  "color": "rgba(0, 11, 110, 1)",
+                  "index": 6
+                },
+                "LeaseWeb-NL": {
+                  "color": "dark-orange",
+                  "index": 5
+                },
+                "iWeb": {
+                  "color": "rgba(255, 255, 255, 1)",
+                  "index": 8
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 18,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Job"
+          }
+        ]
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "up",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Exporter List",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "name": false
+            },
+            "indexByName": {
+              "Time": 0,
+              "Value #A": 3,
+              "__name__": 1,
+              "instance": 4,
+              "job": 2
+            },
+            "renameByName": {
+              "Value #A": "Status",
+              "instance": "Exporter",
+              "job": "Job",
+              "name": "Name"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Value"
+              }
+            ]
+          }
+        }
+      ],
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "No data": {
+                  "index": 0,
+                  "text": "0"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "count(up==0) OR on() vector(0)",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Servers Down",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "Value": "Count"
+            }
+          }
+        }
+      ],
+      "transparent": true,
+      "type": "stat"
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "dark-orange",
+                "value": 1
+              },
+              {
+                "color": "dark-red",
+                "value": 15
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 16,
+        "y": 0
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "count(ALERTS{alertstate!=\"pending\"}) OR on() vector(0)",
+          "format": "time_series",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Alerts",
+      "type": "stat"
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "displayMode": "color-text"
+          },
+          "mappings": [
+            {
+              "options": {
+                "AWS-BR": {
+                  "color": "green",
+                  "index": 4
+                },
+                "AWS-DE": {
+                  "color": "blue",
+                  "index": 3
+                },
+                "AWS-USA": {
+                  "color": "dark-red",
+                  "index": 5
+                },
+                "CURACAO": {
+                  "color": "yellow",
+                  "index": 7
+                },
+                "LINODE": {
+                  "color": "rgba(1, 209, 195, 1)",
+                  "index": 9
+                },
+                "LeaseWeb-DE": {
+                  "color": "dark-blue",
+                  "index": 10
+                },
+                "LeaseWeb-NL": {
+                  "color": "dark-orange",
+                  "index": 6
+                },
+                "critical": {
+                  "color": "dark-red",
+                  "index": 0,
+                  "text": "CRITICAL"
+                },
+                "firing": {
+                  "color": "light-red",
+                  "index": 2,
+                  "text": "FIRING"
+                },
+                "iWeb": {
+                  "color": "rgba(255, 255, 255, 1)",
+                  "index": 8
+                },
+                "warning": {
+                  "color": "orange",
+                  "index": 1,
+                  "text": "WARNING"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
+      "id": 6,
+      "options": {
+        "showHeader": true
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "ALERTS{alertstate!=\"pending\"}",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Alerts",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Value": true,
+              "__name__": true,
+              "alertstate": false,
+              "device": true,
+              "fstype": true,
+              "instance": true
+            },
+            "indexByName": {
+              "Time": 5,
+              "Value": 4,
+              "__name__": 0,
+              "alertname": 7,
+              "alertstate": 8,
+              "device": 1,
+              "fstype": 2,
+              "instance": 3,
+              "job": 10,
+              "mountpoint": 9,
+              "name": 11,
+              "severity": 6
+            },
+            "renameByName": {
+              "Time": "",
+              "alertname": "Alert",
+              "alertstate": "State",
+              "device": "Device",
+              "fstype": "",
+              "instance": "",
+              "job": "Datacenter",
+              "mountpoint": "Device",
+              "name": "Server",
+              "severity": "Severity"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Severity"
+              }
+            ]
+          }
+        }
+      ],
+      "transparent": true,
+      "type": "table"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 30,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {
+    "hidden": true,
+    "refresh_intervals": [
+      "10s"
+    ],
+    "time_options": [
+      "5m",
+      "15m",
+      "1h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d"
+    ],
+    "type": "timepicker"
+  },
+  "timezone": "browser",
+  "title": "General Status",
+  "uid": "xblZWlZnz",
+  "version": 48
+}
