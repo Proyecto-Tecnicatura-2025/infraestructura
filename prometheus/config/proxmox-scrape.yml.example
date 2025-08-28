@@ -1,0 +1,10 @@
+scrape_configs:
+  - job_name: 'proxmox'
+    metrics_path: /pve
+    params:
+      module: [section en pve.yml]
+      target: [ip del proxmox]
+    static_configs:
+      - targets:
+          - ip:port del exporter
+

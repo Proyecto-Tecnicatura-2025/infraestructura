@@ -1,0 +1,5 @@
+default:
+  user: usuario del linux@pam
+  password: pass del usuario porque somos unos gronchos
+  verify_ssl: false
+

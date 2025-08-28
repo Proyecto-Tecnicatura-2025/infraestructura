@@ -3,4 +3,4 @@ global:
   evaluation_interval: 5s
 
 scrape_config_files:
-    - /prometheus/ProxmoxScrapeConfig.yml
+    - /prometheus/proxmox-scrape.yml

@@ -20,6 +20,8 @@ services:
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
       - '--log.level=debug'
+    networks:
+      - intranet
 
   grafana:
     depends_on:
@@ -39,7 +41,13 @@ services:
       - "./config/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml"
       - "./config/grafana/general-status-dashboard.yml:/etc/grafana/provisioning/dashboards/general-status-dashboard.json"
       - "./config/grafana/node-exporter-dashboard.yml:/etc/grafana/provisioning/dashboards/node-exporter-full-dashboard.json"
+    networks:
+      - intranet
 
 volumes:
   prometheus_data: {}
   grafana_data: {}
+
+networks:
+  intranet:
+    driver: bridge

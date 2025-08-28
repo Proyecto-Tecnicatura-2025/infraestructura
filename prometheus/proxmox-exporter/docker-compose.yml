@@ -1,0 +1,13 @@
+services:
+  pve-exporter:
+    image: prompve/prometheus-pve-exporter
+    container_name: pve-exporter
+    restart: unless-stopped
+    volumes:
+      - ./pve/pve.yml:/etc/prometheus/pve.yml
+    networks:
+      - prometheus_intranet
+
+networks:
+  prometheus_intranet:
+    external: true
