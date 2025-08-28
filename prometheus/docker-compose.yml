@@ -1,0 +1,22 @@
+services:
+  prometheus:
+    image: prom/prometheus:main
+    tty: true
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1024m"
+    ports:
+      - "9090:9090"
+    volumes:
+      - "./.prometheus_data:/prometheus:Z"
+      - "./config:/prometheus"
+      - "./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml"
+      - "./config/prometheus/rules.yml:/etc/rules.yml"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--log.level=debug'
