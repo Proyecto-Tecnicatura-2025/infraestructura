@@ -3,8 +3,5 @@ error que no tiene permisos sobre
 `prometheus/queries.active` acá tenés la respuesta:
 
 ```shell
-chown -R 65534:65534 config ./.prometheus_data
+chown -R 65534:65534 config
 ```
-
-*Puede que sobre algo pero así funciona.*
-
