@@ -2,6 +2,12 @@ services:
   backend:
     volumes:
       - ${BACKEND_CONTEXT:-../../auth-service}:/var/www/html
-  web_client:
+
+  web_tienda:
     volumes:
-      - ${WEB_CONTEXT:-../../web-client}:/app
+      - ${TIENDA_CONTEXT:-../../tienda-web}:/app
+
+  web_publicadores:
+    volumes:
+      - ${PUBLICADORES_CONTEXT:-../../publicadores-web}:/app
+
