@@ -30,21 +30,20 @@ services:
       - vendor:/var/www/html/vendor
       - storage:/var/www/html/storage
       - bootstrap_cache:/var/www/html/bootstrap/cache
-    # usá el entrypoint del repo si existe; sino apache
     command:
-    - bash
-    - -lc
-    - >
-      set -e;
-      cd /var/www/html;
-      mkdir -p storage/framework/{sessions,views,cache,data} resources/views;
-      chown -R www-data:www-data storage bootstrap/cache || true;
-      chmod -R ug+rw storage bootstrap/cache || true;
-      if [ -x /usr/local/bin/entrypoint.sh ]; then
-        exec /usr/local/bin/entrypoint.sh;
-      else
-        exec apache2-foreground;
-      fi
+      - bash
+      - -lc
+      - >
+        set -e;
+        cd /var/www/html;
+        mkdir -p storage/framework/{sessions,views,cache,data} resources/views;
+        chown -R www-data:www-data storage bootstrap/cache || true;
+        chmod -R ug+rw storage bootstrap/cache || true;
+        if [ -x /usr/local/bin/entrypoint.sh ]; then
+          exec /usr/local/bin/entrypoint.sh;
+        else
+          exec apache2-foreground;
+        fi
     networks: [sso_net]
 
   web_tienda:
@@ -57,14 +56,27 @@ services:
       VITE_AUTH_URL: ${AUTH_URL:-http://localhost:8080}
       VITE_API_URL:  ${AUTH_URL:-http://localhost:8080}
       VITE_REDIRECT_URI: ${TIENDA_REDIRECT:-http://localhost:5174/auth/callback}
-      VITE_OAUTH_CLIENT_ID: ${TIENDA_CLIENT_ID:-}   # <- lo setea dev-all con --env-file sso_clients.env
+      VITE_OAUTH_CLIENT_ID: ${TIENDA_CLIENT_ID:-}
+      VITE_OAUTH_SCOPES: ${TIENDA_SCOPES:-profile:read orders:read}
       CHOKIDAR_USEPOLLING: "1"
     ports:
       - "5174:5174"
     volumes:
       - ../../tienda-web:/app
       - tienda_node_modules:/app/node_modules
-    command: ["sh","-lc","set -e; if [ ! -f package.json ]; then echo 'tienda-web sin package.json'; exec sleep infinity; fi; if [ ! -x node_modules/.bin/vite ]; then echo 'instalando dependencias...'; npm install; fi; exec npm run dev -- --host --port 5174"]
+    command:
+      - sh
+      - -lc
+      - >
+        set -e;
+        if [ ! -f package.json ]; then
+          echo '📭 tienda-web: no hay package.json'; exec sleep infinity;
+        fi;
+        if [ ! -x node_modules/.bin/vite ]; then
+          echo '📦 tienda-web: instalando dependencias...'; npm install;
+        fi;
+        exec npm run dev -- --host --port 5174
+    networks: [sso_net]
 
   web_publicadores:
     image: node:20-alpine
@@ -76,15 +88,27 @@ services:
       VITE_AUTH_URL: ${AUTH_URL:-http://localhost:8080}
       VITE_API_URL:  ${AUTH_URL:-http://localhost:8080}
       VITE_REDIRECT_URI: ${PUBLICADORES_REDIRECT:-http://localhost:5175/auth/callback}
-      VITE_OAUTH_CLIENT_ID: ${PUBLICADORES_CLIENT_ID:-}  # <- lo setea dev-all con --env-file sso_clients.env
+      VITE_OAUTH_CLIENT_ID: ${PUBLICADORES_CLIENT_ID:-}
+      VITE_OAUTH_SCOPES: ${PUBLICADORES_SCOPES:-profile:read catalog:read catalog:write}
       CHOKIDAR_USEPOLLING: "1"
     ports:
       - "5175:5175"
     volumes:
       - ../../publicadores-web:/app
       - publicadores_node_modules:/app/node_modules
-    command: ["sh","-lc","set -e; if [ ! -f package.json ]; then echo 'publicadores-web sin package.json'; exec sleep infinity; fi; if [ ! -x node_modules/.bin/vite ]; then echo 'instalando dependencias...'; npm install; fi; exec npm run dev -- --host --port 5175"]
-
+    command:
+      - sh
+      - -lc
+      - >
+        set -e;
+        if [ ! -f package.json ]; then
+          echo '📭 publicadores-web: no hay package.json'; exec sleep infinity;
+        fi;
+        if [ ! -x node_modules/.bin/vite ]; then
+          echo '📦 publicadores-web: instalando dependencias...'; npm install;
+        fi;
+        exec npm run dev -- --host --port 5175
+    networks: [sso_net]
 
   db-oauth:
     image: mysql:8.0
