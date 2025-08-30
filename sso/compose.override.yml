@@ -1,13 +1,12 @@
 services:
   backend:
     volumes:
-      - ${BACKEND_CONTEXT:-../../auth-service}:/var/www/html
+      - ${BACKEND_CONTEXT:-../../auth-service}:/var/www/html:Z
 
   web_tienda:
     volumes:
-      - ${TIENDA_CONTEXT:-../../tienda-web}:/app
+      - ${TIENDA_CONTEXT:-../../tienda-web}:/app:Z
 
   web_publicadores:
     volumes:
-      - ${PUBLICADORES_CONTEXT:-../../publicadores-web}:/app
-
+      - ${PUBLICADORES_CONTEXT:-../../publicadores-web}:/app:Z
