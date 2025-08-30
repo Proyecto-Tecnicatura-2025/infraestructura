@@ -7,15 +7,16 @@ export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-sso_local}"
 
 AUTH_URL="${AUTH_URL:-http://localhost:8080}"
 
-# Servicios (ajustá si tu compose usa otros nombres)
 DB_SERVICE="${DB_SERVICE:-db-oauth}"
 BACKEND_SERVICE="${BACKEND_SERVICE:-backend}"
 
-# Redirects por defecto para las dos apps
 TIENDA_REDIRECT="${TIENDA_REDIRECT:-http://localhost:5174/auth/callback}"
 PUBLICADORES_REDIRECT="${PUBLICADORES_REDIRECT:-http://localhost:5175/auth/callback}"
 
-# Siempre usar compose.yml + compose.override.yml
+# Scopes por defecto (pueden sobreescribirse en .env.local)
+TIENDA_SCOPES="${TIENDA_SCOPES:-profile:read orders:read}"
+PUBLICADORES_SCOPES="${PUBLICADORES_SCOPES:-profile:read catalog:read catalog:write}"
+
 COMPOSE="docker compose -f compose.yml -f compose.override.yml"
 
 echo "▶️  docker compose up..."
@@ -104,6 +105,8 @@ PUBLICADORES_ID="$(echo "$IDS" | awk -F= '/^PUBLICADORES_CLIENT_ID=/{print $2}')
   echo "PUBLICADORES_CLIENT_ID=${PUBLICADORES_ID}"
   echo "TIENDA_REDIRECT=${TIENDA_REDIRECT}"
   echo "PUBLICADORES_REDIRECT=${PUBLICADORES_REDIRECT}"
+  echo "TIENDA_SCOPES=${TIENDA_SCOPES}"
+  echo "PUBLICADORES_SCOPES=${PUBLICADORES_SCOPES}"
 } > sso_clients.env
 
 echo "📋 Clientes creados/actualizados:"
