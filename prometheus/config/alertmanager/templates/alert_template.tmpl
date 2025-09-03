@@ -1,0 +1,18 @@
+{{ define "telegram.mymsg" }}
+{{- $status := .Status -}}
+{{- $emoji := "✅" -}}
+{{- if eq $status "firing" -}}
+  {{ $emoji = "🚨" }}
+{{- else if eq $status "resolved" -}}
+  {{ $emoji = "✅" }}
+{{- end -}}
+
+{{$emoji}} *ALERTA* {{$emoji}}
+*Servidor:* {{ .Labels.instance }}
+*ID:* {{ .Labels.id }}
+*Estado:* {{ upper $status }}
+*Severidad:* {{ .Labels.severity | title }}
+*Resumen:* {{ .Annotations.summary }}
+*Descripción:* {{ .Annotations.description }}
+{{ end }}
+
