@@ -1,0 +1,12 @@
+groups:
+- name: proxmox-alerts
+  rules:
+  - alert: ProxmoxNodeDown
+    expr: pve_up{id="qemu/103",job="proxmox"} == 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Proxmox node {{ $labels.instance }} is down"
+      description: "Exporter cannot reach Proxmox node {{ $labels.instance }} for more than 1 minute."
+
