@@ -63,6 +63,7 @@ services:
     volumes:
       - "alertmanager_data:/data:Z"
       - "./config/alertmanager/config.yml:/alertmanager/alertmanager.yml"
+      - "./config/alertmanager/templates:/alertmanager/templates"
     command:
       - '--config.file=/alertmanager/alertmanager.yml'
       - '--cluster.advertise-address=0.0.0.0:9093'
