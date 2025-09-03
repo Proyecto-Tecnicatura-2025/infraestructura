@@ -1,6 +1,7 @@
 services:
   prometheus:
     image: prom/prometheus:main
+    container_name: prometheus
     tty: true
     restart: unless-stopped
     logging:
@@ -27,6 +28,7 @@ services:
     depends_on:
       - prometheus
     image: grafana/grafana:latest
+    container_name: grafana
     tty: true
     logging:
       driver: "json-file"
@@ -44,9 +46,35 @@ services:
     networks:
       - intranet
 
+  alertmanager:
+    depends_on:
+      - prometheus
+    image: prom/alertmanager:main
+    container_name: alertmanager
+    user: "1000:1000"
+    tty: true
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1024m"
+    ports:
+      - "9093:9093"
+    volumes:
+      - "alertmanager_data:/data:Z"
+      - "./config/alertmanager/config.yml:/alertmanager/alertmanager.yml"
+    command:
+      - '--config.file=/alertmanager/alertmanager.yml'
+      - '--cluster.advertise-address=0.0.0.0:9093'
+      - '--storage.path=/data'
+      - '--log.level=debug'
+    networks:
+      - intranet
+
 volumes:
   prometheus_data: {}
   grafana_data: {}
+  alertmanager_data: {}
 
 networks:
   intranet:

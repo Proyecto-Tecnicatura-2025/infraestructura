@@ -4,3 +4,11 @@ global:
 
 scrape_config_files:
     - /prometheus/proxmox-scrape.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+      - targets: ["alertmanager:9093"]
+
+rule_files:
+  - "/etc/rules.yml"
