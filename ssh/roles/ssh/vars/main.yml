@@ -1,0 +1,8 @@
+---
+# vars file for ssh
+ssh_packages: "openssh-server"
+sshd_service: "sshd"
+sshd_config_path: "/etc/ssh/sshd_config"
+sshd_binary: "/usr/sbin/sshd"
+
+permit_root_login: "yes"

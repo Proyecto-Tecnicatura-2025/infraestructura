@@ -1,0 +1,17 @@
+- name: Instalar firewalld
+  ansible.builtin.package:
+    name: firewalld
+    state: present
+
+- name: Habilitar y arrancar firewalld
+  ansible.builtin.service:
+    name: firewalld
+    state: started
+    enabled: true
+
+- name: Abrir puerto SSH en firewalld (permanente e inmediato)
+  ansible.posix.firewalld:
+    port: "{{ ssh_port }}/tcp"
+    state: enabled
+    permanent: true
+    immediate: true

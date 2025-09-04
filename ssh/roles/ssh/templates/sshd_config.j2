@@ -1,0 +1,119 @@
+# Archivo generado por Ansible - NO EDITAR MANUALMENTE
+# Basado en la estructura por defecto de openssh-server.
+#       $OpenBSD: sshd_config,v 1.104 2021/07/02 05:11:21 dtucker Exp $
+
+# Este es el archivo de configuración global de sshd. Ver sshd_config(5).
+
+# sshd fue compilado con PATH=/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin
+
+# La estrategia del sshd_config por defecto es listar opciones con su valor
+# default (comentadas). Las opciones no comentadas sobreescriben el default.
+
+# Para modificar configuración global, cree archivos *.conf en:
+#   /etc/ssh/sshd_config.d/
+# que serán incluidos automáticamente abajo.
+
+# Si cambia el puerto en un sistema con SELinux, debe informarlo a SELinux:
+# semanage port -a -t ssh_port_t -p tcp #PORTNUMBER
+
+
+Include /etc/ssh/sshd_config.d/*.conf
+
+# --- Red y puerto ---
+Port {{ ssh_port | default(22) }}
+AddressFamily any
+{% for addr in listen_address | default([]) -%}
+ListenAddress {{ addr }}
+{% endfor %}
+Protocol 2
+
+# --- Claves de host ---
+#HostKey /etc/ssh/ssh_host_rsa_key
+#HostKey /etc/ssh/ssh_host_ecdsa_key
+#HostKey /etc/ssh/ssh_host_ed25519_key
+
+# --- Cifrado y recambio de claves ---
+#RekeyLimit default none
+
+# --- Logging ---
+SyslogFacility AUTHPRIV
+LogLevel {{ log_level | default('INFO') }}
+
+# --- Autenticación ---
+LoginGraceTime {{ login_grace_time | default('2m') }}
+PermitRootLogin {{ permit_root_login | default('no') }}
+StrictModes {{ strict_modes | default('yes') }}
+MaxAuthTries {{ max_auth_tries | default(5) }}
+MaxSessions {{ max_sessions | default(3) }}
+
+PubkeyAuthentication {{ pubkey_authentication | default('yes') }}
+# Por defecto se chequea .ssh/authorized_keys (y authorized_keys2 en versiones antiguas)
+AuthorizedKeysFile .ssh/authorized_keys
+
+# HostbasedAuthentication (usar sólo si confía en ~/.ssh/known_hosts)
+#HostbasedAuthentication no
+#IgnoreUserKnownHosts no
+#IgnoreRhosts yes
+
+PasswordAuthentication {{ password_authentication | default('no') }}
+PermitEmptyPasswords {{ permit_empty_passwords | default('no') }}
+
+# --- Sesiones y tiempos ---
+ClientAliveInterval {{ client_alive_interval | default(0) }}
+ClientAliveCountMax {{ client_alive_count_max | default(3) }}
+
+# --- Autenticación interactiva --- 
+KbdInteractiveAuthentication {{ kbd_interactive_authentication | default('no') }}
+
+# --- Kerberos ---
+KerberosAuthentication {{ kerberos_authentication | default('no') }}
+
+# --- GSSAPI ---
+GSSAPIAuthentication {{ gssapi_authentication | default('no') }}
+
+# --- PAM ---
+UsePAM {{ use_pam | default('yes') }}
+
+# --- Reenvíos y TTY ---
+AllowAgentForwarding {{ allow_agent_forwarding | default('no') }}
+AllowTcpForwarding {{ allow_tcp_forwarding | default('no') }}
+X11Forwarding {{ x11_forwarding | default('no') }}
+#PermitTTY yes
+PrintMotd {{ print_motd | default('no') }}
+PrintLastLog {{ print_last_log | default('yes') }}
+TCPKeepAlive {{ tcp_keep_alive | default('yes') }}
+PermitUserEnvironment {{ permit_user_environment | default('no') }}
+UseDNS {{ use_dns | default('no') }}
+#PidFile /var/run/sshd.pid
+#MaxStartups 10:30:100
+PermitTunnel {{ permit_tunnel | default('no') }}
+#ChrootDirectory none
+#VersionAddendum none
+
+# --- Banner ---
+{% if manage_banner | default(false) %}
+Banner {{ banner_path }}
+{% endif %}
+
+# --- Listas de control ---
+{% set _allow_users = allow_users | default([]) -%}
+{% set _allow_groups = allow_groups | default([]) -%}
+{% set _deny_users  = deny_users  | default([]) -%}
+{% set _deny_groups = deny_groups | default([]) -%}
+{% if _allow_users | length > 0 %}AllowUsers {{ _allow_users | join(' ') }}{% endif %}
+{% if _allow_groups | length > 0 %}AllowGroups {{ _allow_groups | join(' ') }}{% endif %}
+{% if _deny_users  | length > 0 %}DenyUsers {{ _deny_users  | join(' ') }}{% endif %}
+{% if _deny_groups | length > 0 %}DenyGroups {{ _deny_groups | join(' ') }}{% endif %}
+
+# Subsystem
+Subsystem sftp /usr/libexec/openssh/sftp-server
+
+# Ejemplo para overrides por usuario/grupo
+#Match User anoncvs
+#   X11Forwarding no
+#   AllowTcpForwarding no
+#   PermitTTY no
+#   ForceCommand cvs server
+#Match Group sftponly
+#   ChrootDirectory %h
+#   ForceCommand internal-sftp

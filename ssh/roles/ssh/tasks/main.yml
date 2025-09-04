@@ -1,0 +1,9 @@
+---
+# tasks file for ssh
+- name: Incluir tareas de configuración
+  ansible.builtin.import_tasks: configure.yml
+
+- name: Incluir tareas de firewall
+  ansible.builtin.import_tasks: firewall.yml
+  when: firewall_manage | bool
+

@@ -1,8 +1,10 @@
-- name: SSH hardening en Rocky Linux
+- name: Configuracion base para SSH en Rocky Linux
   hosts: all
   become: true
   gather_facts: true
 
   roles:
-    - hardening
+    #- user
+    - ssh
+    #- hardening
 

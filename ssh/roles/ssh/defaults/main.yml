@@ -1,0 +1,58 @@
+---
+# defaults file for ssh
+ssh_port: 21309
+log_level: "INFO"                    # QUIET | FATAL | ERROR | INFO | VERBOSE | DEBUG | DEBUG1 | DEBUG2 | DEBUG3
+
+# Seguridad
+permit_root_login: "no"              # "yes" | "no" | "prohibit-password"
+password_authentication: "no"        # "yes" | "no"
+pubkey_authentication: "yes"         # "yes" | "no"
+kbd_interactive_authentication: "no" # Reemplaza ChallengeResponseAuthentication (deprecado)
+use_pam: "yes"                       # En RHEL conviene "yes" para cuentas/sesión
+x11_forwarding: "no"
+permit_empty_passwords: "no"
+strict_modes: "yes"                  # Verifica permisos de archivos ~/.ssh y home
+
+# Límites y tiempos
+client_alive_interval: 300           # Segundos; 0 = deshabilitado
+client_alive_count_max: 2
+login_grace_time: 30                 # Segundos para completar login
+max_auth_tries: 3
+max_sessions: 10
+
+# Red
+listen_address:
+  - "0.0.0.0"
+
+# Reenvíos y TTY
+allow_agent_forwarding: "no"
+allow_tcp_forwarding: "no"
+print_motd: "no"
+print_last_log: "yes"
+tcp_keep_alive: "yes"
+permit_user_environment: "no"
+use_dns: "no"
+permit_tunnel: "no"
+
+# Kerberos / GSSAPI (habilitar sólo si se usa)
+kerberos_authentication: "no"
+gssapi_authentication: "no"
+
+# Listas de control
+allow_users: []
+allow_groups: [ "root", "gssh" ]            # "gssh" = "Grupo SSH"
+deny_users: []
+deny_groups: []
+
+# Banner
+manage_banner: true
+banner_path: "/etc/issue.net"
+banner_text: |
+  SISTEMA DE USO RESTRINGIDO — RestSolutions
+  El acceso se limita a personal autorizado. Toda actividad puede ser monitoreada y auditada.
+  El uso no autorizado está prohibido y puede implicar sanciones administrativas, civiles y/o penales.
+  Al continuar, usted consiente el monitoreo y las políticas de RestSolutions.
+  Si no está autorizado, desconéctese ahora. 
+
+# Firewall
+firewall_manage: true

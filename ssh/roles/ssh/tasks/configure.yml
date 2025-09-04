@@ -1,0 +1,21 @@
+---
+- name: Gestionar banner
+  ansible.builtin.copy:
+    dest: "{{ banner_path }}"
+    content: "{{ banner_text }}"
+    owner: root
+    group: root
+    mode: "0644"
+  when: manage_banner | bool
+
+- name: Plantilla de sshd_config (con validación previa)
+  ansible.builtin.template:
+    src: "sshd_config.j2"
+    dest: "{{ sshd_config_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+    backup: true
+    validate: "{{ sshd_binary }} -t -f %s"
+  notify: restart sshd
+
