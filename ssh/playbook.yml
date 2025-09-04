@@ -1,0 +1,8 @@
+- name: SSH hardening en Rocky Linux
+  hosts: all
+  become: true
+  gather_facts: true
+
+  roles:
+    - hardening
+
