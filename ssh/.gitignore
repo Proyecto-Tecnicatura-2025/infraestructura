@@ -1,2 +1,2 @@
-/inventario/hosts.ini
-/inventario/group_vars/all.yml
+inventario/hosts.ini
+inventario/group_vars/all.yml
