@@ -1,0 +1,7 @@
+services:
+  backend:
+    volumes:
+      - ${BACKEND_CONTEXT:-../../auth-service}:/var/www/html
+  web_client:
+    volumes:
+      - ${WEB_CONTEXT:-../../web-client}:/app
