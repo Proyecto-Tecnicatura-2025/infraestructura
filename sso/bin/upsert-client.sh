@@ -1,36 +1,62 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-export COMPOSE_PROJECT_NAME=sso_local
-[ -f .env.local ] && set -a && . ./.env.local && set +a
-WEB_PORT="${WEB_PORT:-5173}"
-REDIRECT="http://localhost:${WEB_PORT}/auth/callback"
+export COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-sso_local}
 
-PHP_CODE='$redirect = getenv("REDIRECT") ?: "http://localhost:5173/auth/callback";
-$c = Laravel\Passport\Client::firstOrNew(["name" => "web-client (local)"]);
-$c->name    = "web-client (local)";
-$c->secret  = null;                  // público (PKCE)
-$c->revoked = 0;
-$c->redirect_uris = [$redirect];     // 👈 arrays, no json_encode
-$c->grant_types   = ["authorization_code","refresh_token"];
-$c->save();
-echo $c->id;'
+# Parámetros
+NAME="${NAME:-web-client (local)}"
+REDIRECT="${REDIRECT:-http://localhost:5173/auth/callback}"
+GRANTS_RAW="${GRANTS:-authorization_code,refresh_token}"
 
-CID=$(docker compose -f compose.yml exec -T \
-  -e REDIRECT="$REDIRECT" \
-  backend php artisan tinker --execute "$PHP_CODE" \
-  | tail -n1 | tr -d '\r\n')
+docker compose -f compose.yml exec -T \
+  -e NAME="$NAME" -e REDIRECT="$REDIRECT" -e GRANTS_RAW="$GRANTS_RAW" \
+  backend bash -lc '
+set -e
+cat >/tmp/upsert_client.php <<'"'"'PHP'"'"'
+<?php
+chdir("/var/www/html");
+require "vendor/autoload.php";
+$app = require "bootstrap/app.php";
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
 
-echo "client_id=${CID}"
+use Laravel\Passport\Client;
 
-# persistir en .env.local
-if [ ! -f .env.local ]; then cp .env.example .env.local || true; fi
-if grep -q '^VITE_OAUTH_CLIENT_ID=' .env.local; then
-  sed -i -E "s|^VITE_OAUTH_CLIENT_ID=.*|VITE_OAUTH_CLIENT_ID=${CID}|" .env.local
-else
-  printf "\nVITE_OAUTH_CLIENT_ID=%s\n" "${CID}" >> .env.local
-fi
+// Entradas
+$name     = getenv("NAME") ?: "web-client (local)";
+$redirect = getenv("REDIRECT") ?: "http://localhost:5173/auth/callback";
+$grantsRaw= getenv("GRANTS_RAW") ?: "authorization_code,refresh_token";
 
-# recrear front para inyectar env
-set -a; . ./.env.local; set +a
-docker compose -f compose.yml up -d web_client
+// Normalizar grants (array único, sin vacíos)
+$grants = array_values(array_unique(array_filter(array_map("trim", explode(",", $grantsRaw)))));
+// Fallback razonable
+if (!$grants) { $grants = ["authorization_code", "refresh_token"]; }
+
+// Buscar por NOMBRE exacto y no revocado
+$c = Client::query()->where("name", $name)->where("revoked", false)->first();
+
+if (!$c) {
+  $c = new Client();
+  $c->name    = $name;
+  $c->secret  = null;     // público (PKCE)
+  $c->revoked = false;
+  $c->redirect_uris = [$redirect];   // << arrays (casts en v13)
+  $c->grant_types   = $grants;       // << arrays (casts en v13)
+  $c->save();
+} else {
+  // Merge del redirect en la lista existente (único)
+  $uris = is_array($c->redirect_uris) ? $c->redirect_uris : [];
+  if (!in_array($redirect, $uris, true)) { $uris[] = $redirect; }
+  $c->redirect_uris = $uris;
+  $c->grant_types   = is_array($c->grant_types) ? array_values(array_unique(array_merge($c->grant_types, $grants))) : $grants;
+  $c->secret        = null;
+  $c->revoked       = false;
+  $c->save();
+}
+
+echo $c->id;
+PHP
+php /tmp/upsert_client.php
+rm -f /tmp/upsert_client.php
+'
+echo
